@@ -1,4 +1,4 @@
-import { ensureActive } from "./job.js";
+import { ensureActive } from "./job";
 
 const NOT_FOUND_SYMBOL = Symbol("NOT_FOUND");
 

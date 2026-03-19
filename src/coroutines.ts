@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "async_hooks";
-import { Deferred, type Job } from "./job.js";
+import { Deferred, type Job } from "./job";
 
 export const JOB_KEY = Symbol("Job");
 

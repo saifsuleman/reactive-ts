@@ -1,4 +1,4 @@
-import Semaphore from "./semaphore.js";
+import Semaphore from "./semaphore";
 
 export default class Mutex {
   private semaphore = new Semaphore(1);

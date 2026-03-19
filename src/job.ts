@@ -1,4 +1,4 @@
-import { currentJobOrNull } from "./coroutines.js";
+import { currentJobOrNull } from "./coroutines";
 
 export class JobCancelled extends Error {
   constructor() {

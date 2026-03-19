@@ -1,43 +1,27 @@
-import { coroutineScope, launch } from "./coroutines.js";
-import { delay } from "./delay.js";
-import { flow } from "./flow.js";
-import { JobCancelled } from "./job.js";
-import ReentrantMutex from "./reentrant-mutex.js";
+// Concurrency
+export {
+  coroutineScope,
+  launch,
+  withContext,
+  coroutineContext,
+  coroutineContextOrNull,
+  currentJob,
+  currentJobOrNull,
+} from "./coroutines";
+export type { CoroutineContext } from "./coroutines";
 
-const job = coroutineScope(() => {
-  launch(async () => {
-    const mutex = new ReentrantMutex();
-    await mutex.lock();
-    await mutex.lock();
-    await delay(2000);
-    throw new Error("my dih hurt");
-  });
+// Job
+export { Deferred, JobCancelled, ensureActive } from "./job";
+export type { Job } from "./job";
 
-  launch(async () => {
-    try {
-      await flow<number>(async (emit) => {
-        for (let i = 0; i < 100; i++) {
-          await emit(i);
-          await delay(100);
-        }
-      })
-        .chunked(3)
-        .skip(2)
-        .take(5)
-        .map((chunk) => chunk.reduce((a, b) => a + b, 0))
-        .map((result) => `Result: ${result}`)
-        .collect(console.log);
-    } catch (ex) {
-      if (ex instanceof JobCancelled) {
-        console.log("Job cancelled before we could finish :c");
-      }
-    }
-  });
-});
+// Flow
+export { flow, FlowAbort } from "./flow";
+export type { Flow, FlowProducer, EmitFn } from "./flow";
 
-job.join().then(
-  () => {},
-  (error) => {
-    console.error(error);
-  },
-);
+// Synchronization
+export { default as Mutex } from "./mutex";
+export { default as ReentrantMutex } from "./reentrant-mutex";
+export { default as Semaphore } from "./semaphore";
+
+// Utilities
+export { delay } from "./delay";

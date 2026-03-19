@@ -1,5 +1,5 @@
-import { coroutineContext } from "./coroutines.js";
-import Mutex from "./mutex.js";
+import { coroutineContext } from "./coroutines";
+import Mutex from "./mutex";
 
 const REENTRANT_KEY = Symbol("Reentrant");
 

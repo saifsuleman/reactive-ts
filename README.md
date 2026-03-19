@@ -1,6 +1,8 @@
 > [!IMPORTANT]
 > **reactive-ts** is in development and not yet production-ready. Use at your own risk.
+
 > This **README** is also temporaily outdated while the library evolves.
+
 > For now, read `src/example.ts` for examples on what library usage looks like.
 
 # reactive-ts

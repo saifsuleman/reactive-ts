@@ -1,4 +1,5 @@
 import { currentJobOrNull } from "./coroutines";
+import { getUncaughtExceptionHandler } from "./exceptions";
 
 export class JobCancelled extends Error {
   constructor() {
@@ -25,7 +26,7 @@ export class Deferred<T> {
 
   constructor(
     public readonly parent?: Job,
-    private readonly options: DeferredOptions = {},
+    options: DeferredOptions = {},
   ) {
     this.completion = new Promise<T>((res, rej) => {
       this.resolve = res;
@@ -43,11 +44,17 @@ export class Deferred<T> {
       this.completion.catch((err) => {
         if (!(err instanceof JobCancelled)) {
           if (parent.isSupervisor) {
-            throw err;
+            const handler = getUncaughtExceptionHandler();
+            handler(err);
+          } else {
+            parent.fail(err);
           }
-
-          parent.fail(err);
         }
+      });
+    } else {
+      this.completion.catch((err) => {
+        const handler = getUncaughtExceptionHandler();
+        handler(err);
       });
     }
   }

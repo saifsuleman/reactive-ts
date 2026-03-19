@@ -29,14 +29,17 @@ export function currentJobOrNull(): Job | null {
   return coroutineContextOrNull()?.[JOB_KEY] ?? null;
 }
 
-export function withContext<T>(ctx: Record<symbol, any>, fn: () => T): T {
+export function withContext<T>(
+  ctx: CoroutineContextData,
+  fn: () => Promise<T> | T,
+): Promise<T> {
   if (ctx[JOB_KEY]) {
     throw new Error("cannot override coroutine identity with `withContext`");
   }
 
   const parent = coroutineContext();
   const merged = { ...parent, ...ctx };
-  return storage.run(merged, fn);
+  return storage.run(merged, async () => await fn());
 }
 
 export interface LaunchOptions {

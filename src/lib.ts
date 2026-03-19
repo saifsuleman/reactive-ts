@@ -1,6 +1,5 @@
 // Concurrency
 export {
-  coroutineScope,
   launch,
   withContext,
   coroutineContext,

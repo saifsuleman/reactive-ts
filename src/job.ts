@@ -8,8 +8,13 @@ export class JobCancelled extends Error {
 
 export type Job = Deferred<unknown>;
 
+export interface DeferredOptions {
+  supervisor?: boolean;
+}
+
 export class Deferred<T> {
-  readonly children = new Set<Job>();
+  public readonly children = new Set<Job>();
+  public readonly isSupervisor: boolean;
 
   private _settled = false;
   private _cancelled = false;
@@ -18,20 +23,29 @@ export class Deferred<T> {
   private resolve!: (value: T) => void;
   private reject!: (reason?: unknown) => void;
 
-  constructor(public readonly parent?: Job) {
+  constructor(
+    public readonly parent?: Job,
+    private readonly options: DeferredOptions = {},
+  ) {
     this.completion = new Promise<T>((res, rej) => {
       this.resolve = res;
       this.reject = rej;
     });
 
+    this.isSupervisor = options.supervisor ?? false;
+
     if (parent) {
-      parent.addChild(this as unknown as Job);
+      parent.addChild(this as Job);
 
       // Wire rejection up to the parent so errors bubble to the root naturally.
       // Cancellations are excluded — they always originate from above and should
       // not travel back up the tree.
       this.completion.catch((err) => {
         if (!(err instanceof JobCancelled)) {
+          if (parent.isSupervisor) {
+            throw err;
+          }
+
           parent.fail(err);
         }
       });
@@ -44,6 +58,7 @@ export class Deferred<T> {
 
   cancel() {
     if (this._settled) return;
+
     this._settled = true;
     this._cancelled = true;
 
@@ -56,11 +71,10 @@ export class Deferred<T> {
 
   fail(error: unknown) {
     if (this._settled) return;
+
     this._settled = true;
     this._cancelled = true;
 
-    // Errors go up (via the .catch() in the constructor).
-    // Cancellations go down — children don't need to know why they're stopping.
     for (const child of this.children) {
       child.cancel();
     }

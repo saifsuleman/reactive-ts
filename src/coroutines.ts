@@ -3,9 +3,9 @@ import { Deferred, type Job } from "./job";
 
 export const JOB_KEY = Symbol("Job");
 
-export type CoroutineContext = {
-  [JOB_KEY]: Job;
-} & Record<symbol, any>;
+export type CoroutineContextMetadata = { [JOB_KEY]: Job };
+export type CoroutineContextData = Record<symbol, any>;
+export type CoroutineContext = CoroutineContextMetadata & CoroutineContextData;
 
 const storage = await createStorage<CoroutineContext>();
 
@@ -39,13 +39,20 @@ export function withContext<T>(ctx: Record<symbol, any>, fn: () => T): T {
   return storage.run(merged, fn);
 }
 
-export function coroutineScope<T>(fn: () => Promise<T> | T): Deferred<T> {
-  const parent = storage.getStore();
-  const parentJob = parent?.[JOB_KEY];
-  const deferred = new Deferred<T>(parentJob);
+export interface LaunchOptions {
+  supervisor?: boolean;
+}
+
+export function launch<T>(
+  fn: () => Promise<T> | T,
+  options: LaunchOptions = {},
+): Deferred<T> {
+  const parent: CoroutineContextData = storage.getStore() ?? {};
+  const supervisor = options.supervisor ?? false;
+  const deferred = new Deferred<T>(parent[JOB_KEY], { supervisor });
 
   const context: CoroutineContext = {
-    ...(parent ?? {}),
+    ...parent,
     [JOB_KEY]: deferred as Job,
   };
 
@@ -57,28 +64,6 @@ export function coroutineScope<T>(fn: () => Promise<T> | T): Deferred<T> {
       );
       deferred.complete(result);
       return result;
-    } catch (error) {
-      deferred.fail(error);
-    }
-  });
-
-  return deferred;
-}
-
-export function launch<T>(fn: () => Promise<T> | T): Deferred<T> {
-  const parent = storage.getStore();
-  const parentJob = parent?.[JOB_KEY];
-  const deferred = new Deferred<T>(parentJob);
-
-  const context: CoroutineContext = {
-    ...(parent ?? {}),
-    [JOB_KEY]: deferred as Job,
-  };
-
-  storage.run(context, async () => {
-    try {
-      const result = await fn();
-      deferred.complete(result);
     } catch (error) {
       deferred.fail(error);
     }

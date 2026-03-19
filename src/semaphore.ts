@@ -2,8 +2,8 @@ export class Semaphore {
   private count: number;
   private queue: (() => void)[] = [];
 
-  constructor(count: number) {
-    this.count = count;
+  constructor(maxPermits: number) {
+    this.count = maxPermits;
   }
 
   async acquire() {

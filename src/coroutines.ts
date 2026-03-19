@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from "async_hooks";
+import { createStorage, type ContextStorage } from "./storage";
 import { Deferred, type Job } from "./job";
 
 export const JOB_KEY = Symbol("Job");
@@ -7,7 +7,7 @@ export type CoroutineContext = {
   [JOB_KEY]: Job;
 } & Record<symbol, any>;
 
-const storage = new AsyncLocalStorage<CoroutineContext>();
+const storage = await createStorage<CoroutineContext>();
 
 export function coroutineContextOrNull(): CoroutineContext | null {
   return storage.getStore() ?? null;
@@ -22,13 +22,11 @@ export function coroutineContext(): CoroutineContext {
 }
 
 export function currentJob(): Job {
-  const ctx = coroutineContext();
-  return ctx[JOB_KEY];
+  return coroutineContext()[JOB_KEY];
 }
 
 export function currentJobOrNull(): Job | null {
-  const ctx = coroutineContextOrNull();
-  return ctx?.[JOB_KEY] ?? null;
+  return coroutineContextOrNull()?.[JOB_KEY] ?? null;
 }
 
 export function withContext<T>(ctx: Record<symbol, any>, fn: () => T): T {

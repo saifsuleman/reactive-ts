@@ -16,12 +16,12 @@
   ],
   "license": "ISC",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/lib.js",
+  "types": "./dist/lib.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/lib.js",
+      "types": "./dist/lib.d.ts"
     }
   },
   "files": [

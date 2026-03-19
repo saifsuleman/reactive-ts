@@ -1,13 +1,20 @@
-import { AsyncLocalStorage } from "async_hooks";
-import { Deferred, type Job } from "./job.js";
+import { createStorage } from "./storage";
+import { Deferred, type Job } from "./job";
 
 export const JOB_KEY = Symbol("Job");
 
-export type CoroutineContext = {
-  [JOB_KEY]: Job;
-} & Record<symbol, any>;
+export type CoroutineContextMetadata = { [JOB_KEY]: Job };
+export type CoroutineContextData = Record<symbol, any>;
+export type CoroutineContext = CoroutineContextMetadata & CoroutineContextData;
 
-const storage = new AsyncLocalStorage<CoroutineContext>();
+let globalContextData: CoroutineContextData = {};
+
+export const getGlobalContextData = () => globalContextData;
+export const setGlobalContextData = (data: CoroutineContextData) => {
+  globalContextData = data;
+};
+
+const storage = await createStorage<CoroutineContext>();
 
 export function coroutineContextOrNull(): CoroutineContext | null {
   return storage.getStore() ?? null;
@@ -22,32 +29,40 @@ export function coroutineContext(): CoroutineContext {
 }
 
 export function currentJob(): Job {
-  const ctx = coroutineContext();
-  return ctx[JOB_KEY];
+  return coroutineContext()[JOB_KEY];
 }
 
 export function currentJobOrNull(): Job | null {
-  const ctx = coroutineContextOrNull();
-  return ctx?.[JOB_KEY] ?? null;
+  return coroutineContextOrNull()?.[JOB_KEY] ?? null;
 }
 
-export function withContext<T>(ctx: Record<symbol, any>, fn: () => T): T {
+export function withContext<T>(
+  ctx: CoroutineContextData,
+  fn: () => Promise<T> | T,
+): Promise<T> {
   if (ctx[JOB_KEY]) {
     throw new Error("cannot override coroutine identity with `withContext`");
   }
 
   const parent = coroutineContext();
   const merged = { ...parent, ...ctx };
-  return storage.run(merged, fn);
+  return storage.run(merged, async () => await fn());
 }
 
-export function coroutineScope<T>(fn: () => Promise<T> | T): Deferred<T> {
-  const parent = storage.getStore();
-  const parentJob = parent?.[JOB_KEY];
-  const deferred = new Deferred<T>(parentJob);
+export interface LaunchOptions {
+  supervisor?: boolean;
+}
+
+export function launch<T>(
+  fn: () => Promise<T> | T,
+  options: LaunchOptions = {},
+): Deferred<T> {
+  const parent: CoroutineContextData = storage.getStore() ?? globalContextData;
+  const supervisor = options.supervisor ?? false;
+  const deferred = new Deferred<T>(parent[JOB_KEY], { supervisor });
 
   const context: CoroutineContext = {
-    ...(parent ?? {}),
+    ...parent,
     [JOB_KEY]: deferred as Job,
   };
 
@@ -59,28 +74,6 @@ export function coroutineScope<T>(fn: () => Promise<T> | T): Deferred<T> {
       );
       deferred.complete(result);
       return result;
-    } catch (error) {
-      deferred.fail(error);
-    }
-  });
-
-  return deferred;
-}
-
-export function launch<T>(fn: () => Promise<T> | T): Deferred<T> {
-  const parent = storage.getStore();
-  const parentJob = parent?.[JOB_KEY];
-  const deferred = new Deferred<T>(parentJob);
-
-  const context: CoroutineContext = {
-    ...(parent ?? {}),
-    [JOB_KEY]: deferred as Job,
-  };
-
-  storage.run(context, async () => {
-    try {
-      const result = await fn();
-      deferred.complete(result);
     } catch (error) {
       deferred.fail(error);
     }

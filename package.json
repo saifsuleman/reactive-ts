@@ -1,17 +1,44 @@
 {
   "name": "reactive-ts",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Structured concurrency, reactive streams, and synchronization primitives for TypeScript — inspired by Kotlin Coroutines.",
+  "keywords": [
+    "concurrency",
+    "structured-concurrency",
+    "coroutines",
+    "reactive",
+    "streams",
+    "flow",
+    "mutex",
+    "semaphore",
+    "async",
+    "typescript"
+  ],
   "license": "ISC",
-  "author": "",
   "type": "module",
-  "main": "index.js",
+  "main": "./dist/lib.js",
+  "types": "./dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/lib.js",
+      "types": "./dist/lib.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "ts-node-dev": "^2.0.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

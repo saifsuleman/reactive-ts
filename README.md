@@ -56,10 +56,14 @@ Because flows check the current job's cancellation status on every emit, they pa
 
 `Mutex`, `ReentrantMutex`, and `Semaphore` fill a gap that the JS runtime simply doesn't address. Even in single-threaded async code, interleaved `await` points create real race conditions — and without lock primitives, the only defense is careful reasoning about execution order.
 
-## Install
+## Roadmap
 
-```bash
-npm install reactive-ts
-```
+- **Publish to NPM registry**
+- **More Flow operators** — `flatMap`, `zip`, `combine`, `debounce`, and others from the Kotlin Flow API
+- **Channels** — a `Channel<T>` primitive for communication between coroutines, similar to Go channels and `kotlinx.coroutines.channels`
+- **Hot streams** — `SharedFlow` and `StateFlow` equivalents for broadcast and state-holding use cases
+- **Cross-runtime support** — `CoroutineContext` currently relies on Node's `AsyncLocalStorage`. Investigate support for Bun, Deno, and browser environments, where that API may differ or be unavailable
+
+## Install
 
 Requires Node.js 18+ and TypeScript 5+. Zero runtime dependencies.

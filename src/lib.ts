@@ -6,7 +6,10 @@ export {
   coroutineContextOrNull,
   currentJob,
   currentJobOrNull,
+  setGlobalContextData,
+  getGlobalContextData,
 } from "./coroutines";
+
 export type { CoroutineContext } from "./coroutines";
 
 // Job

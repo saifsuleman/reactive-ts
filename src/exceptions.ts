@@ -1,20 +1,22 @@
-import { coroutineContext, withContext } from "./coroutines";
+import { coroutineContextOrNull, withContext } from "./coroutines";
 
 export type UncaughtExceptionHandler = (error: unknown) => void;
 
-const CONTEXT_KEY = Symbol("UncaughtExceptionHandler");
-
-const DEFAULT_HANDLER = (error: unknown) => {
+export const UNCAUGHT_EXCEPTION_HANDLER_KEY = Symbol("UncaughtExceptionHandler");
+const DEFAULT_HANDLER: UncaughtExceptionHandler = (error) => {
   throw error;
 };
 
-export function withUncaughtExceptionHandler(
+export async function withUncaughtExceptionHandler<T>(
   handler: UncaughtExceptionHandler,
-  callback: () => Promise<void> | void,
-): Promise<void> {
-  return withContext({ [CONTEXT_KEY]: handler }, callback);
+  callback: () => Promise<T> | T
+): Promise<T> {
+  return await withContext({
+    [UNCAUGHT_EXCEPTION_HANDLER_KEY]: handler,
+  }, callback);
 }
 
 export function getUncaughtExceptionHandler(): UncaughtExceptionHandler {
-  return coroutineContext()[CONTEXT_KEY] ?? DEFAULT_HANDLER;
+  const context = coroutineContextOrNull();
+  return context?.[UNCAUGHT_EXCEPTION_HANDLER_KEY] ?? DEFAULT_HANDLER;
 }

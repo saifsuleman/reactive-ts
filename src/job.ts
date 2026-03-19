@@ -53,8 +53,7 @@ export class Deferred<T> {
       });
     } else {
       this.completion.catch((err) => {
-        const handler = getUncaughtExceptionHandler();
-        handler(err);
+        throw err;
       });
     }
   }

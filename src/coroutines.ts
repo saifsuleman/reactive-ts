@@ -1,4 +1,4 @@
-import { createStorage, type ContextStorage } from "./storage";
+import { createStorage } from "./storage";
 import { Deferred, type Job } from "./job";
 
 export const JOB_KEY = Symbol("Job");
@@ -6,6 +6,13 @@ export const JOB_KEY = Symbol("Job");
 export type CoroutineContextMetadata = { [JOB_KEY]: Job };
 export type CoroutineContextData = Record<symbol, any>;
 export type CoroutineContext = CoroutineContextMetadata & CoroutineContextData;
+
+let globalContextData: CoroutineContextData = {};
+
+export const getGlobalContextData = () => globalContextData;
+export const setGlobalContextData = (data: CoroutineContextData) => {
+  globalContextData = data;
+};
 
 const storage = await createStorage<CoroutineContext>();
 
@@ -50,7 +57,7 @@ export function launch<T>(
   fn: () => Promise<T> | T,
   options: LaunchOptions = {},
 ): Deferred<T> {
-  const parent: CoroutineContextData = storage.getStore() ?? {};
+  const parent: CoroutineContextData = storage.getStore() ?? globalContextData;
   const supervisor = options.supervisor ?? false;
   const deferred = new Deferred<T>(parent[JOB_KEY], { supervisor });
 

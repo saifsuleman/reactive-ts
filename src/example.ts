@@ -1,14 +1,28 @@
-import { launch } from "./coroutines";
+import { getGlobalContextData, launch, setGlobalContextData } from "./coroutines";
 import { delay } from "./delay";
-import { withUncaughtExceptionHandler } from "./exceptions";
+import { UNCAUGHT_EXCEPTION_HANDLER_KEY, withUncaughtExceptionHandler } from "./exceptions";
 import { flow } from "./flow";
 import { JobCancelled } from "./job";
 import { ReentrantLock } from "./reentrant-lock";
 
+setGlobalContextData({
+  ...getGlobalContextData(),
+  [UNCAUGHT_EXCEPTION_HANDLER_KEY]: (error: unknown) => {
+    console.log(error);
+  },
+});
+
 const job = launch(
   () => {
+    launch(async () => {
+      await delay(5000);
+      throw new Error("other hello");
+    });
+
     withUncaughtExceptionHandler(
-      (error) => console.log("oops"),
+      (error) => {
+        console.log("error.");
+      },
       async () => {
         launch(async () => {
           const mutex = new ReentrantLock();
@@ -40,8 +54,9 @@ const job = launch(
         });
       },
     );
+
   },
-  { supervisor: false },
+  { supervisor: true },
 );
 
 job.join().then(

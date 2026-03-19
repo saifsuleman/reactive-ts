@@ -19,9 +19,8 @@ export { flow, FlowAbort } from "./flow";
 export type { Flow, FlowProducer, EmitFn } from "./flow";
 
 // Synchronization
-export { default as Mutex } from "./mutex";
-export { default as ReentrantMutex } from "./reentrant-mutex";
-export { default as Semaphore } from "./semaphore";
+export { ReentrantLock } from "./reentrant-lock";
+export { Semaphore } from "./semaphore";
 
 // Utilities
 export { delay } from "./delay";

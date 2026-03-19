@@ -1,4 +1,4 @@
-export default class Semaphore {
+export class Semaphore {
   private count: number;
   private queue: (() => void)[] = [];
 

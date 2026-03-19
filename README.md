@@ -55,11 +55,3 @@ Because flows check the current job's cancellation status on every emit, they pa
 ## Synchronization Primitives
 
 `Mutex`, `ReentrantMutex`, and `Semaphore` fill a gap that the JS runtime simply doesn't address. Even in single-threaded async code, interleaved `await` points create real race conditions — and without lock primitives, the only defense is careful reasoning about execution order.
-
-## Install
-
-```bash
-npm install reactive-ts
-```
-
-Requires Node.js 18+ and TypeScript 5+. Zero runtime dependencies.

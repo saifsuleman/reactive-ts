@@ -13,7 +13,7 @@ TypeScript has none of this. `async/await` is great for sequential async code, b
 
 `reactive-ts` brings that Kotlin model to TypeScript. It's not a port, and it doesn't try to replicate coroutines at the language level. Instead it takes the core ideas — structured scopes, implicit context propagation, cold streams, cooperative cancellation — and expresses them in idiomatic TypeScript on top of `async/await`. Context propagation uses `AsyncLocalStorage` where available (Node.js, Bun, Deno) and falls back to Zone.js in browser environments.
 
-## Structured Concurrency
+### Structured Concurrency
 
 The central idea is that concurrent work should have structure. `launch` creates a job that owns all the child jobs launched inside it. It doesn't complete until every child finishes, and if any child fails, the rest are cancelled and the error bubbles up. You cannot accidentally orphan a background task.
 
@@ -30,7 +30,7 @@ Pass `{ supervisor: true }` to create a supervisor job that isolates child failu
 
 Cancellation flows down the tree automatically. Cancel a parent and every descendant is cancelled. This makes timeouts, user-initiated cancellation, and error handling dramatically simpler to reason about.
 
-## Coroutine Context
+### Coroutine Context
 
 Every coroutine runs with an implicit `CoroutineContext` — a symbol-keyed key-value store that's automatically propagated through the async call stack. You never pass it around manually. Scoped values are just available wherever you are in the call tree.
 
@@ -47,7 +47,7 @@ const job = launch(() => {
 
 This is also how `ReentrantLock` works. Rather than tracking lock ownership by thread (there are no threads), it tracks it by coroutine context — so the same coroutine can acquire the same lock multiple times without deadlocking, which makes recursive and compositional code much easier to write safely.
 
-## Reactive Streams
+### Reactive Streams
 
 `Flow` is a cold, lazy, cancellation-aware stream. Cold means nothing executes until you collect it — there's no wasted work, no backpressure to manage, no subscriptions to clean up. You just describe a pipeline and run it when you're ready.
 
@@ -67,7 +67,7 @@ Available operators: `map`, `filter`, `skip`, `take`, `chunked`. Terminal operat
 
 Because flows check the current job's cancellation status on every emit, they participate in structured concurrency automatically. If the enclosing scope is cancelled, the stream stops at the next emission point — no special handling required.
 
-## Synchronization Primitives
+### Synchronization Primitives
 
 `ReentrantLock` and `Semaphore` fill a gap that the JS runtime simply doesn't address. Even in single-threaded async code, interleaved `await` points create real race conditions — and without lock primitives, the only defense is careful reasoning about execution order.
 
@@ -80,6 +80,33 @@ lock.unlock();
 const sem = new Semaphore(3);
 await sem.acquire(); // up to 3 concurrent holders
 sem.release();
+```
+
+### Uncaught Exception Handler
+
+By default, when a child job fails inside a supervisor scope, the error is rethrown. You can override this behavior by installing an uncaught exception handler into the coroutine context using `withUncaughtExceptionHandler`. The handler receives errors from failed child jobs in supervisor scopes instead of letting them propagate.
+
+```ts
+const job = launch(() => {
+  withUncaughtExceptionHandler((error) => {
+    console.error("caught:", error);
+  }, async () => {
+    launch(async () => {
+      throw new Error("this won't crash the parent");
+    });
+  });
+}, { supervisor: true });
+```
+
+You can also set a handler globally via `setGlobalContextData` so it applies to all root coroutines:
+
+```ts
+setGlobalContextData({
+  ...getGlobalContextData(),
+  [UNCAUGHT_EXCEPTION_HANDLER_KEY]: (error: unknown) => {
+    console.error(error);
+  },
+});
 ```
 
 ## API Reference
@@ -98,6 +125,9 @@ sem.release();
 | `getGlobalContextData()` | Get the current global context data |
 | `ensureActive()` | Throw `JobCancelled` if the current job is cancelled |
 | `delay(ms)` | Promise-based delay utility |
+| `withUncaughtExceptionHandler(handler, fn)` | Run a function with a custom error handler for supervisor child failures |
+| `getUncaughtExceptionHandler()` | Get the current handler from context (falls back to rethrowing) |
+| `UNCAUGHT_EXCEPTION_HANDLER_KEY` | Symbol key for setting the handler via context or global data |
 
 ### Job / Deferred
 

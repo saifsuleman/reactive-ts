@@ -1,9 +1,9 @@
-import { getGlobalContextData, launch, setGlobalContextData } from "./coroutines";
-import { delay } from "./delay";
-import { UNCAUGHT_EXCEPTION_HANDLER_KEY, withUncaughtExceptionHandler } from "./exceptions";
-import { flow } from "./flow";
-import { JobCancelled } from "./job";
-import { ReentrantLock } from "./reentrant-lock";
+import { getGlobalContextData, launch, setGlobalContextData } from "../src/coroutines";
+import { delay } from "../src/delay";
+import { UNCAUGHT_EXCEPTION_HANDLER_KEY, withUncaughtExceptionHandler } from "../src/exceptions";
+import { flow } from "../src/flow";
+import { JobCancelled } from "../src/job";
+import { ReentrantLock } from "../src/reentrant-lock";
 
 setGlobalContextData({
   ...getGlobalContextData(),

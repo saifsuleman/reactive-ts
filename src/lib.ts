@@ -1,3 +1,10 @@
+/**
+ * @module reactive-ts
+ *
+ * Structured concurrency, reactive streams, and synchronization primitives
+ * for TypeScript — inspired by Kotlin Coroutines.
+ */
+
 // Concurrency
 export {
   launch,
@@ -23,6 +30,10 @@ export type { Flow, FlowProducer, EmitFn } from "./flow";
 // Synchronization
 export { ReentrantLock } from "./reentrant-lock";
 export { Semaphore } from "./semaphore";
+
+// Exceptions
+export { withUncaughtExceptionHandler, getUncaughtExceptionHandler, UNCAUGHT_EXCEPTION_HANDLER_KEY } from "./exceptions";
+export type { UncaughtExceptionHandler } from "./exceptions";
 
 // Utilities
 export { delay } from "./delay";

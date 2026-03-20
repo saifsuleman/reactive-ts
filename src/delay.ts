@@ -9,6 +9,6 @@
  * await delay(1000); // wait 1 second
  * ```
  */
-export async function delay(ms: number) {
+export async function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

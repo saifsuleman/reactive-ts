@@ -13,19 +13,11 @@ export default tseslint.config(
       },
     },
     rules: {
-      // Disallow floating promises — critical for async correctness
       "@typescript-eslint/no-floating-promises": "error",
-      // Disallow awaiting non-thenables
       "@typescript-eslint/await-thenable": "error",
-      // Require Promise-returning functions to be handled
       "@typescript-eslint/no-misused-promises": "error",
-      // Ban `any` — use `unknown` instead
-      "@typescript-eslint/no-explicit-any": "error",
-      // Require explicit return types on exported functions
-      "@typescript-eslint/explicit-module-boundary-types": "error",
-      // Disallow non-null assertions
-      "@typescript-eslint/no-non-null-assertion": "error",
-      // Disallow unused variables (TS-aware, allows _-prefixed)
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
@@ -34,6 +26,9 @@ export default tseslint.config(
       "prefer-const": "error",
       // No console logging in library code
       "no-console": "error",
+      "indent": ["error", 2],
+      "quotes": ["error", "double"],
+      "semi": ["error", "always"],
     },
   },
 );

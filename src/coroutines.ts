@@ -10,7 +10,7 @@ export const JOB_KEY = Symbol("Job");
 export type CoroutineContextMetadata = { [JOB_KEY]: Job };
 
 /** Arbitrary symbol-keyed data stored in a coroutine context. */
-export type CoroutineContextData = Record<symbol, any>;
+export type CoroutineContextData = Record<symbol, unknown>;
 
 /** The full coroutine context: metadata plus user-defined data. */
 export type CoroutineContext = CoroutineContextMetadata & CoroutineContextData;
@@ -20,16 +20,18 @@ let globalContextData: CoroutineContextData = {};
 /**
  * Returns the global context data that is inherited by root-level `launch` calls.
  */
-export const getGlobalContextData = () => globalContextData;
+export function getGlobalContextData(): CoroutineContextData {
+  return globalContextData;
+}
 
 /**
  * Replaces the global context data inherited by root-level `launch` calls.
  *
  * @param data - The new global context data.
  */
-export const setGlobalContextData = (data: CoroutineContextData) => {
+export function setGlobalContextData(data: CoroutineContextData): void {
   globalContextData = data;
-};
+}
 
 const storage = await createStorage<CoroutineContext>();
 
@@ -130,14 +132,14 @@ export function launch<T>(
 ): Deferred<T> {
   const parent: CoroutineContextData = storage.getStore() ?? globalContextData;
   const supervisor = options.supervisor ?? false;
-  const deferred = new Deferred<T>(parent[JOB_KEY], { supervisor });
+  const deferred = new Deferred<T>(parent[JOB_KEY] as Job | undefined, { supervisor });
 
   const context: CoroutineContext = {
     ...parent,
     [JOB_KEY]: deferred as Job,
   };
 
-  storage.run(context, async () => {
+  void storage.run(context, async () => {
     try {
       const result = await fn();
       await Promise.allSettled(

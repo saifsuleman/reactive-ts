@@ -4,7 +4,7 @@ import { currentJobOrNull } from "./coroutines";
  * Error thrown when a job is cancelled.
  */
 export class JobCancelled extends Error {
-  constructor() {
+  constructor(public reason?: unknown) {
     super("Job cancelled");
   }
 }
@@ -43,6 +43,7 @@ export class Deferred<T> implements Promise<T> {
 
   private _settled = false;
   private _cancelled = false;
+  private _exception: unknown | undefined = undefined;
 
   private completion: Promise<T>;
   private resolve!: (value: T) => void;
@@ -98,6 +99,10 @@ export class Deferred<T> implements Promise<T> {
     return this._cancelled;
   }
 
+  get exception() {
+    return this._exception;
+  }
+
   /**
    * Cancels this deferred and all of its children. The completion promise
    * rejects with {@link JobCancelled}. No-op if already settled.
@@ -126,9 +131,10 @@ export class Deferred<T> implements Promise<T> {
 
     this._settled = true;
     this._cancelled = true;
+    this._exception = error;
 
     for (const child of this.children) {
-      child.cancel();
+      child.fail(error);
     }
 
     this.reject(error);

@@ -82,33 +82,6 @@ await sem.acquire(); // up to 3 concurrent holders
 sem.release();
 ```
 
-### Uncaught Exception Handler
-
-By default, when a child job fails inside a supervisor scope, the error is rethrown. You can override this behavior by installing an uncaught exception handler into the coroutine context using `withUncaughtExceptionHandler`. The handler receives errors from failed child jobs in supervisor scopes instead of letting them propagate.
-
-```ts
-const job = launch(() => {
-  withUncaughtExceptionHandler((error) => {
-    console.error("caught:", error);
-  }, async () => {
-    launch(async () => {
-      throw new Error("this won't crash the parent");
-    });
-  });
-}, { supervisor: true });
-```
-
-You can also set a handler globally via `setGlobalContextData` so it applies to all root coroutines:
-
-```ts
-setGlobalContextData({
-  ...getGlobalContextData(),
-  [UNCAUGHT_EXCEPTION_HANDLER_KEY]: (error: unknown) => {
-    console.error(error);
-  },
-});
-```
-
 ## API Reference
 
 ### Concurrency

@@ -70,13 +70,12 @@ export class Deferred<T> implements Promise<T> {
       // Cancellations are excluded — they always originate from above and should
       // not travel back up the tree.
 
-      if (!parent.isSupervisor) {
-        this.completion.catch((err) => {
-          if (!(err instanceof JobCancelled)) {
-            parent.fail(err);
-          }
-        });
-      }
+      this.completion.catch((err) => {
+        if (!(err instanceof JobCancelled)
+          && !parent.isSupervisor) {
+          parent.fail(err);
+        }
+      });
     }
   }
 

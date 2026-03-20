@@ -1,5 +1,4 @@
 import { currentJobOrNull } from "./coroutines";
-import { getUncaughtExceptionHandler } from "./exceptions";
 
 /**
  * Error thrown when a job is cancelled.
@@ -35,7 +34,7 @@ export interface DeferredOptions {
  *
  * @typeParam T - The type of the value produced on completion.
  */
-export class Deferred<T> {
+export class Deferred<T> implements Promise<T> {
   /** The set of child jobs owned by this deferred. */
   public readonly children = new Set<Job>();
 
@@ -70,22 +69,30 @@ export class Deferred<T> {
       // Wire rejection up to the parent so errors bubble to the root naturally.
       // Cancellations are excluded — they always originate from above and should
       // not travel back up the tree.
-      this.completion.catch((err) => {
-        if (!(err instanceof JobCancelled)) {
-          if (parent.isSupervisor) {
-            const handler = getUncaughtExceptionHandler();
-            handler(err);
-          } else {
+
+      if (!parent.isSupervisor) {
+        this.completion.catch((err) => {
+          if (!(err instanceof JobCancelled)) {
             parent.fail(err);
           }
-        }
-      });
-    } else {
-      this.completion.catch((err) => {
-        throw err;
-      });
+        });
+      }
     }
   }
+
+  then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined): Promise<TResult1 | TResult2> {
+    return this.completion.then(onfulfilled, onrejected);
+  }
+
+  catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined): Promise<T | TResult> {
+    return this.completion.catch(onrejected);
+  }
+
+  finally(onfinally?: (() => void) | null | undefined): Promise<T> {
+    return this.completion.finally(onfinally);
+  }
+
+  [Symbol.toStringTag]: string = "Deferred";
 
   /** Whether this deferred has been cancelled (or failed). */
   get isCancelled() {

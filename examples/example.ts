@@ -56,7 +56,7 @@ const job = launch(
     );
 
   },
-  { supervisor: true },
+  { supervisor: false },
 );
 
 job.join().then(

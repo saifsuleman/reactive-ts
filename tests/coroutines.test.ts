@@ -10,7 +10,6 @@ import {
   getGlobalContextData,
   JOB_KEY,
 } from "../src/coroutines";
-import { JobCancelled } from "../src/job";
 
 afterEach(() => {
   setGlobalContextData({});
@@ -68,21 +67,16 @@ describe("launch", () => {
   it("supervisor mode isolates child errors", async () => {
     let handlerCalled = false;
 
-    const deferred = launch(async () => {
-      // Set up a custom exception handler via context
-      const { withUncaughtExceptionHandler } = await import("../src/exceptions");
-      await withUncaughtExceptionHandler(
-        () => { handlerCalled = true; },
-        async () => {
-          launch(async () => {
-            throw new Error("child error");
-          });
-          await new Promise((r) => setTimeout(r, 50));
-        },
-      );
+    await launch(async () => {
+      const inner = launch(async () => {
+        throw new Error("child error");
+      });
+
+      inner.catch(() => {
+        handlerCalled = true;
+      });
     }, { supervisor: true });
 
-    await deferred.join();
     expect(handlerCalled).toBe(true);
   });
 

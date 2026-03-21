@@ -31,9 +31,5 @@ export type { Flow, FlowProducer, EmitFn } from "./flow";
 export { ReentrantLock } from "./reentrant-lock";
 export { Semaphore } from "./semaphore";
 
-// Exceptions
-export { withUncaughtExceptionHandler, getUncaughtExceptionHandler, UNCAUGHT_EXCEPTION_HANDLER_KEY } from "./exceptions";
-export type { UncaughtExceptionHandler } from "./exceptions";
-
 // Utilities
 export { delay } from "./delay";

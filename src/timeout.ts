@@ -3,7 +3,7 @@ import { delay } from "./delay";
 
 class TimeoutException extends Error {
   constructor() {
-    super("TimeoutException")
+    super("TimeoutException");
   }
 }
 
